@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>친환경 챌린지 - 깔끔한 카드 디자인</title>
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #f0f8ff;
+      padding: 30px;
+      color: #333;
+    }
+    h1 {
+      color: #2e7d32;
+      text-align: center;
+      margin-bottom: 30px;
+      text-shadow: 1px 1px 3px #a5d6a7;
+    }
+    #challengeContainer {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+    .challenge {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(46, 125, 50, 0.15);
+      padding: 20px 25px;
+      width: 300px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      user-select: none;
+    }
+    .challenge:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 15px rgba(46, 125, 50, 0.3);
+    }
+    .challenge input[type="checkbox"] {
+      margin-right: 18px;
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      accent-color: #388e3c;
+    }
+    .challenge span {
+      font-size: 16px;
+      line-height: 1.4;
+      flex: 1;
+    }
+    #points {
+      text-align: center;
+      font-size: 22px;
+      color: #1b5e20;
+      margin-bottom: 40px;
+      font-weight: 600;
+      text-shadow: 1px 1px 2px #a5d6a7;
+    }
+    h2 {
+      color: #2e7d32;
+      margin-bottom: 15px;
+      text-align: center;
+      text-shadow: 1px 1px 2px #a5d6a7;
+    }
+    #items {
+      max-width: 700px;
+      margin: 0 auto 30px auto;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .item {
+      background: #e8f5e9;
+      border: 2px solid #a5d6a7;
+      border-radius: 12px;
+      padding: 15px 20px;
+      width: 200px;
+      box-shadow: 0 3px 6px rgba(165, 214, 167, 0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-weight: 600;
+      color: #2e7d32;
+      user-select: none;
+      transition: background 0.3s ease;
+    }
+    .item button {
+      margin-top: 12px;
+      padding: 8px 14px;
+      background-color: #388e3c;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: background-color 0.25s ease;
+    }
+    .item button:hover {
+      background-color: #2e7d32;
+    }
+    #purchasedItems {
+      max-width: 700px;
+      margin: 0 auto 40px auto;
+      padding-left: 20px;
+      color: #33691e;
+      font-weight: 600;
+      font-size: 16px;
+      list-style-type: disc;
+    }
+    #resetBtn {
+      display: block;
+      margin: 0 auto;
+      background-color: #4caf50;
+      border: none;
+      padding: 14px 26px;
+      font-size: 18px;
+      color: white;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      box-shadow: 0 5px 12px rgba(76, 175, 80, 0.5);
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    #resetBtn:hover {
+      background-color: #388e3c;
+    }
+  </style>
+</head>
+<body>
+  <h1>친환경 챌린지</h1>
+
+  <div id="challengeContainer"></div>
+
+  <div id="points">포인트: 0</div>
+
+  <h2>구매 가능한 아이템</h2>
+  <div id="items"></div>
+
+  <h2>구매 내역</h2>
+  <ul id="purchasedItems"></ul>
+
+  <button id="resetBtn">새 챌린지 시작하기</button>
+
+  <script>
+    const allChallenges = [
+      "재활용 분리수거 철저히 하기",
+      "일회용품 사용 줄이기",
+      "대중교통 이용하기",
+      "플라스틱 빨대 사용하지 않기",
+      "전기 절약하기 (불필요한 전등 끄기)",
+      "텀블러 사용하기",
+      "채식 위주 식사하기",
+      "친환경 제품 구매하기",
+      "종이 사용 줄이기",
+      "하루 30분 자연 속 걷기"
+    ];
+
+    const storeItems = [
+      { name: "친환경 텀블러", cost: 30 },
+      { name: "재사용 가능한 장바구니", cost: 20 },
+      { name: "에코백", cost: 50 },
+      { name: "친환경 세제", cost: 40 }
+    ];
+
+    let points = 0;
+    let purchased = [];
+
+    // 각 챌린지 자리별 현재 인덱스 저장 배열
+    let challengeIndices = [];
+
+    function updatePoints(change) {
+      points += change;
+      if(points < 0) points = 0;
+      document.getElementById("points").textContent = `포인트: ${points}`;
+    }
+
+    function updatePurchasedItems() {
+      const purchasedList = document.getElementById("purchasedItems");
+      purchasedList.innerHTML = "";
+      purchased.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        purchasedList.appendChild(li);
+      });
+    }
+
+    function showStoreItems() {
+      const itemsDiv = document.getElementById("items");
+      itemsDiv.innerHTML = "";
+
+      storeItems.forEach(item => {
+        const itemDiv = document.createElement("div");
+        itemDiv.className = "item";
+
+        const itemName = document.createElement("span");
+        itemName.textContent = `${item.name} (가격: ${item.cost} 포인트)`;
+
+        const buyBtn = document.createElement("button");
+        buyBtn.textContent = "구매하기";
+
+        buyBtn.addEventListener("click", () => {
+          if(points >= item.cost) {
+            updatePoints(-item.cost);
+            purchased.push(item.name);
+            updatePurchasedItems();
+            alert(`${item.name}을(를) 구매했습니다!`);
+          } else {
+            alert("포인트가 부족합니다!");
+          }
+        });
+
+        itemDiv.appendChild(itemName);
+        itemDiv.appendChild(buyBtn);
+        itemsDiv.appendChild(itemDiv);
+      });
+    }
+
+    // 랜덤으로 챌린지 인덱스 뽑기 (중복 방지 위해 이미 선택된 인덱스는 제외)
+    function getRandomChallengeIndex(excludeIndices=[]) {
+      const availableIndices = allChallenges.map((_, i) => i).filter(i => !excludeIndices.includes(i));
+      if(availableIndices.length === 0) return -1; // 남은 챌린지 없음
+      const randIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+      return randIndex;
+    }
+
+    function renderChallenges() {
+      const container = document.getElementById("challengeContainer");
+      container.innerHTML = "";
+
+      challengeIndices.forEach((challengeIdx, idx) => {
+        const challengeText = allChallenges[challengeIdx];
+
+        const label = document.createElement("label");
+        label.className = "challenge";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+
+        checkbox.addEventListener("change", () => {
+          if(checkbox.checked) {
+            updatePoints(10);
+
+            // 다음 챌린지 인덱스 뽑기, 현재 challengeIndices에서 중복 안되게 제외
+            const nextIdx = getRandomChallengeIndex(challengeIndices);
+
+            if(nextIdx !== -1) {
+              challengeIndices[idx] = nextIdx;
+            } else {
+              alert("새로운 챌린지가 더 이상 없습니다!");
+            }
+
+            // 체크박스 해제
+            checkbox.checked = false;
+
+            renderChallenges();
+          }
+        });
+
+        label.appendChild(checkbox);
+        label.appendChild(document.createElement("span"));
+        label.lastChild.textContent = challengeText;
+
+        container.appendChild(label);
+      });
+    }
+
+    function startChallenges() {
+      challengeIndices = [];
+
+      // 중복 없이 3개 챌린지 인덱스 뽑기
+      while(challengeIndices.length < 3) {
+        const idx = getRandomChallengeIndex(challengeIndices);
+        if(idx !== -1) {
+          challengeIndices.push(idx);
+        } else {
+          break;
+        }
+      }
+
+      renderChallenges();
+    }
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      startChallenges();
+    });
+
+    // 초기 실행
+    showStoreItems();
+    startChallenges();
+  </script>
+</body>
+</html>
