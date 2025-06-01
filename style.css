@@ -1,0 +1,424 @@
+/* --- 공통 Body 및 기본 스타일 --- */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Noto Sans KR', 'Arial', sans-serif; /* 두 폰트 모두 포함, Noto Sans KR 우선 */
+  background-color: #f0f4f8; /* 캘린더 배경색 기본 사용 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  color: #333; /* 챌린지 기본 텍스트 색상 */
+}
+
+/* --- 네비게이션 바 스타일 --- */
+#main-nav {
+  width: 100%;
+  text-align: center;
+  padding: 20px 0;
+  background-color: #e8f5e9; /* 챌린지 네비 배경색 사용 */
+  box-sizing: border-box;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #a8d5ba;
+}
+#main-nav a {
+  font-weight: bold;
+  text-decoration: none;
+  font-size: 1.2em; /* 크기 살짝 키움 */
+  padding: 10px 20px; /* 패딩 조정 */
+  border-radius: 8px;
+  transition: background-color 0.3s, color 0.3s;
+  margin: 0 10px;
+  color: #2e7d32; /* 기본 링크 색상 */
+}
+#main-nav a.active {
+  background-color: #388e3c;
+  color: #ffffff;
+}
+#main-nav a:not(.active):hover {
+  background-color: #c8e6c9;
+}
+
+/* --- 섹션 공통 스타일 --- */
+.content-section {
+  width: 100%;
+  display: flex; /* 내부 컨텐츠 중앙 정렬을 위해 */
+  flex-direction: column;
+  align-items: center;
+}
+
+
+/* --- TODO 캘린더 섹션 스타일 --- */
+#calendar-section {
+  /* 이 섹션은 내부 요소들이 max-width를 가짐 */
+}
+#calendar-section header { /* 캘린더의 header 태그 */
+  width: 100%;
+  max-width: 480px;
+  background-color: #a8d5ba;
+  color: #2a5d4e;
+  text-align: center;
+  padding: 20px 0;
+  font-size: 2.5rem;
+  font-weight: bold;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  user-select: none;
+  margin-bottom: 20px;
+}
+#calendar-section .calendar {
+  width: 100%;
+  max-width: 480px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+  padding: 20px;
+  user-select: none;
+  box-sizing: border-box;
+}
+#calendar-section .calendar-header {
+  text-align: center;
+  font-weight: 600;
+  color: #2a5d4e;
+  font-size: 1.3rem;
+  margin-bottom: 12px;
+}
+#calendar-section .calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  color: #7cb99e;
+  font-weight: 600;
+  margin-bottom: 8px;
+  user-select: none;
+}
+#calendar-section .calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+#calendar-section .calendar-day {
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  font-weight: 500;
+  user-select: none;
+  border: 2px solid transparent;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+  min-height: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+}
+#calendar-section .calendar-day:hover {
+  background-color: #d6eadf;
+}
+#calendar-section .calendar-day.today {
+  border-color: #7cb99e;
+  font-weight: 700;
+  background-color: #e8f5e9;
+}
+#calendar-section .calendar-day.selected {
+  background-color: #a8d5ba;
+  color: white;
+  font-weight: 700;
+}
+#calendar-section .calendar-day.selected .todo-preview {
+    color: #f0f4f8;
+}
+#calendar-section .calendar-day.empty {
+  cursor: default;
+  background-color: transparent;
+  border-color: transparent;
+}
+#calendar-section .calendar-day.empty:hover {
+  background-color: transparent;
+}
+#calendar-section .todo-preview {
+  font-size: 0.75rem;
+  color: #4b7053;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  padding: 0 2px;
+}
+#calendar-section .todo-container {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 480px;
+  box-sizing: border-box;
+}
+#calendar-section .todo-container h2 {
+  color: #2a5d4e;
+  font-weight: 700;
+  margin-bottom: 10px;
+  user-select: none;
+  font-size: 1.5rem;
+}
+#calendar-section .input-area {
+  display: flex;
+  margin-bottom: 15px;
+}
+#calendar-section #input { /* ID 사용 */
+  flex-grow: 1;
+  padding: 12px 15px;
+  font-size: 1.1rem;
+  border: 2px solid #a8d5ba;
+  border-radius: 8px 0 0 8px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+#calendar-section #input:focus {
+  border-color: #7cb99e;
+  box-shadow: 0 0 8px rgba(124,185,158,0.5);
+}
+#calendar-section #add-btn { /* ID 사용 */
+  padding: 12px 20px;
+  font-size: 1.1rem;
+  background-color: #a8d5ba;
+  color: #2a5d4e;
+  border: none;
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-weight: 600;
+}
+#calendar-section #add-btn:hover {
+  background-color: #7cb99e;
+}
+#calendar-section #add-btn:disabled {
+    background-color: #d0d0d0;
+    cursor: not-allowed;
+}
+#calendar-section #output { /* ID 사용 */
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 280px;
+  overflow-y: auto;
+}
+#calendar-section #output::-webkit-scrollbar { width: 8px; }
+#calendar-section #output::-webkit-scrollbar-track { background: #f0f4f8; border-radius: 4px; }
+#calendar-section #output::-webkit-scrollbar-thumb { background: #a8d5ba; border-radius: 4px; }
+#calendar-section #output::-webkit-scrollbar-thumb:hover { background: #7cb99e; }
+#calendar-section #output li {
+  background-color: white;
+  border: 1px solid #a8d5ba;
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  user-select: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  position: relative;
+}
+#calendar-section #output li.done {
+  text-decoration: line-through;
+  color: #7cb99e;
+  border-color: #d6eadf;
+  background-color: #e8f5e9;
+}
+#calendar-section #output li.done span { opacity: 0.7; }
+#calendar-section #output li input[type="checkbox"] {
+  margin-right: 15px;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #2a5d4e;
+}
+#calendar-section #output li span {
+    flex-grow: 1;
+    word-break: break-all;
+}
+#calendar-section .delete-btn {
+    background: none;
+    border: none;
+    color: #ff6b6b;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 5px;
+    margin-left: 10px;
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+}
+#calendar-section #output li:hover .delete-btn { opacity: 1; }
+
+
+/* --- 친환경 챌린지 섹션 스타일 --- */
+#challenge-section {
+  padding: 0 20px 30px 20px; /* 상하좌우 패딩 조정 */
+  box-sizing: border-box;
+  width: 100%;
+}
+#challenge-section h1, #challenge-section h2 { /* 챌린지 h1, h2 */
+  color: #2e7d32;
+  text-align: center;
+  margin-bottom: 30px;
+  text-shadow: 1px 1px 3px #a5d6a7;
+}
+#challenge-section #challengeContainer {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+#challenge-section .challenge {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(46, 125, 50, 0.15);
+  padding: 20px 25px;
+  width: 100%; /* 모바일에서 꽉차게 */
+  max-width: 300px; /* 최대 너비 */
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+  box-sizing: border-box;
+}
+#challenge-section .challenge:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(46, 125, 50, 0.3);
+}
+#challenge-section .challenge input[type="checkbox"] {
+  margin-right: 18px;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  accent-color: #388e3c;
+}
+#challenge-section .challenge span {
+  font-size: 16px;
+  line-height: 1.4;
+  flex: 1;
+}
+#challenge-section #points {
+  text-align: center;
+  font-size: 22px;
+  color: #1b5e20;
+  margin-bottom: 40px;
+  font-weight: 600;
+  text-shadow: 1px 1px 2px #a5d6a7;
+}
+#challenge-section #items, #challenge-section #certifyFeed {
+  max-width: 700px;
+  margin: 0 auto 30px auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+}
+#challenge-section .item {
+  background: #e8f5e9;
+  border: 2px solid #a5d6a7;
+  border-radius: 12px;
+  padding: 15px 20px;
+  width: 100%; /* 모바일에서 꽉차게 */
+  max-width: 200px; /* 최대 너비 */
+  box-shadow: 0 3px 6px rgba(165, 214, 167, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-weight: 600;
+  color: #2e7d32;
+  user-select: none;
+  transition: background 0.3s ease;
+  box-sizing: border-box;
+}
+#challenge-section .item button {
+  margin-top: 12px;
+  padding: 8px 14px;
+  background-color: #388e3c;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background-color 0.25s ease;
+}
+#challenge-section .item button:hover {
+  background-color: #2e7d32;
+}
+#challenge-section #purchasedItems {
+  max-width: 700px;
+  margin: 0 auto 40px auto;
+  padding-left: 20px;
+  color: #33691e;
+  font-weight: 600;
+  font-size: 16px;
+  list-style-type: disc;
+}
+#challenge-section #purchasedItems li { margin-bottom: 5px; }
+#challenge-section #resetBtn {
+  display: block;
+  margin: 30px auto;
+  background-color: #4caf50;
+  border: none;
+  padding: 14px 26px;
+  font-size: 18px;
+  color: white;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 5px 12px rgba(76, 175, 80, 0.5);
+  transition: background-color 0.3s ease;
+  user-select: none;
+}
+#challenge-section #resetBtn:hover {
+  background-color: #388e3c;
+}
+#challenge-section #certifyForm {
+    max-width:700px;
+    margin:0 auto 30px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(46, 125, 50, 0.1);
+}
+#challenge-section #certifyForm textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+#challenge-section #certifyForm input[type="file"] {
+  margin-bottom: 10px;
+  display: block;
+}
+#challenge-section #postBtn { /* 챌린지의 postBtn */
+  padding: 10px 20px;
+  background-color: #2e7d32;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.25s ease;
+}
+#challenge-section #postBtn:hover {
+    background-color: #1b5e20;
+}
+#challenge-section #certifyFeed div.feed-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: white;
+  border: 1px solid #c8e6c9;
+  border-radius: 12px;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+  padding: 15px 20px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px; /* 카드 간 간격 */
+}

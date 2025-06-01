@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>TODO 캘린더 & 친환경 챌린지</title>
+  <!-- Google Fonts (Noto Sans KR) - 웹폰트 사용 권장 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- 외부 CSS 파일 링크 -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <nav id="main-nav">
+    <a href="#" id="nav-calendar" class="active">TODO 캘린더</a>
+    <a href="#" id="nav-challenge">친환경 챌린지</a>
+  </nav>
+
+  <div id="calendar-section" class="content-section">
+    <header>2025년 5월 TODO 캘린더</header>
+    <div class="calendar">
+      <div class="calendar-header">2025년 5월</div>
+      <div class="calendar-weekdays">
+        <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+      </div>
+      <div class="calendar-days" id="calendar-days"></div>
+    </div>
+    <div class="todo-container">
+      <h2 id="selected-date-title">날짜를 선택하세요</h2>
+      <div class="input-area">
+        <input id="input" type="text" placeholder="할 일을 입력하세요" disabled />
+        <button id="add-btn" disabled>추가</button>
+      </div>
+      <ul id="output"></ul>
+    </div>
+  </div>
+
+  <div id="challenge-section" class="content-section" style="display: none;">
+    <h1>친환경 챌린지</h1>
+    <div id="challengeContainer"></div>
+    <div id="points">포인트: 0</div>
+    <h2>구매 가능한 아이템</h2>
+    <div id="items"></div>
+    <h2>구매 내역</h2>
+    <ul id="purchasedItems"></ul>
+    <button id="resetBtn">새 챌린지 시작하기</button>
+    <h2>챌린지 인증하기</h2>
+    <div id="certifyForm">
+      <textarea id="certifyText" rows="4" placeholder="챌린지 내용을 입력하세요 (예: 오늘 텀블러 사용 인증!)"></textarea>
+      <input type="file" id="certifyImage" accept="image/*">
+      <button id="postBtn">인증 게시</button>
+    </div>
+    <h2>인증 피드</h2>
+    <div id="certifyFeed"></div>
+  </div>
+
+  <!-- 외부 JavaScript 파일 링크 -->
+  <script src="script.js"></script>
+</body>
+</html>
