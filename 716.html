@@ -42,8 +42,7 @@
       font-weight: 700;
       margin-top: 8px;
       font-size: 14px;
-      min-height: 18px;
-      transition: opacity 0.3s ease;
+      min-height: 20px;
     }
     .btn-group button {
       background-color: #388e3c;
@@ -73,95 +72,85 @@
       margin-right: 10px;
       text-align: center;
     }
-    /* 커뮤니티 스타일 */
     #community {
-      width: 320px;
+      width: 600px;
       background: #fff;
       border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 8px rgba(46, 125, 50, 0.15);
       padding: 20px;
       margin-top: 40px;
-      user-select: text;
     }
     #community h2 {
       color: #2e7d32;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
       text-align: center;
     }
     #postInput {
       width: 100%;
       height: 60px;
-      resize: none;
-      padding: 8px;
-      font-size: 14px;
-      border-radius: 8px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 10px;
       border: 1px solid #ccc;
+      resize: none;
       margin-bottom: 10px;
-      font-family: inherit;
     }
     #addPostBtn {
       background-color: #388e3c;
-      color: white;
       border: none;
+      color: white;
       padding: 10px 20px;
-      font-weight: 600;
       border-radius: 10px;
+      font-weight: 600;
       cursor: pointer;
-      width: 100%;
-      margin-bottom: 20px;
       font-size: 16px;
+      float: right;
+      transition: background-color 0.25s ease;
     }
     #addPostBtn:hover {
       background-color: #2e7d32;
     }
     .post {
       border-top: 1px solid #ddd;
-      padding-top: 10px;
-      margin-top: 10px;
+      padding: 10px 0;
     }
     .post time {
       font-size: 12px;
-      color: #777;
-      display: block;
-      margin-bottom: 6px;
+      color: #666;
+      float: right;
     }
     .post p {
+      margin: 5px 0 10px;
       white-space: pre-wrap;
-      font-size: 14px;
-      margin-bottom: 10px;
-      color: #333;
     }
     .comment {
-      font-size: 13px;
-      margin-left: 15px;
+      background: #e8f5e9;
+      padding: 8px 12px;
+      border-radius: 8px;
       margin-bottom: 6px;
-      padding-left: 6px;
-      border-left: 2px solid #a5d6a7;
-      color: #444;
+      font-size: 14px;
     }
     .comment-input {
       display: flex;
+      gap: 8px;
       margin-top: 6px;
-      margin-left: 15px;
     }
-    .comment-input input[type="text"] {
+    .comment-input input {
       flex-grow: 1;
-      border-radius: 6px;
+      padding: 6px 10px;
+      border-radius: 8px;
       border: 1px solid #ccc;
-      padding: 6px 8px;
-      font-size: 13px;
-      font-family: inherit;
+      font-size: 14px;
     }
     .comment-input button {
       background-color: #388e3c;
       border: none;
       color: white;
-      padding: 6px 14px;
-      margin-left: 6px;
+      padding: 6px 12px;
       border-radius: 8px;
       font-weight: 600;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 14px;
       transition: background-color 0.25s ease;
     }
     .comment-input button:hover {
@@ -206,12 +195,11 @@
     </div>
   </div>
 
-  <!-- 커뮤니티 영역 -->
-  <div id="community" class="card">
+  <div id="community">
     <h2>커뮤니티</h2>
-    <textarea id="postInput" placeholder="새 게시글 작성..."></textarea>
-    <button id="addPostBtn" onclick="addPost()">게시글 올리기</button>
-    <div id="postList">작성된 게시글이 없습니다.</div>
+    <textarea id="postInput" placeholder="게시글 작성..."></textarea>
+    <button id="addPostBtn" onclick="addPost()">게시글 등록</button>
+    <div id="postList"></div>
   </div>
 
   <script>
@@ -233,14 +221,14 @@
     const wateringTimedStartBtn = document.getElementById("wateringTimedStartBtn");
     const wateringDurationInput = document.getElementById("wateringDuration");
 
+    const postInput = document.getElementById("postInput");
+    const postListDiv = document.getElementById("postList");
+
     let wateringInterval = null;
     let fillingInterval = null;
     let wateringTimeout = null;
-    let tankWarningTimeout = null;
+    let autoFillMsgTimeout = null;
 
-    // 커뮤니티 관련
-    const postInput = document.getElementById("postInput");
-    const postListDiv = document.getElementById("postList");
     let posts = JSON.parse(localStorage.getItem("communityPosts") || "[]");
 
     function updateDisplay() {
@@ -266,75 +254,58 @@
         humidityAlert.textContent = "";
       }
 
-      // 물탱크 알람
+      // 물탱크 5% 이하일 때 메시지 5초간 표시
       if (waterTankLevel <= 5) {
-        waterTankAlert.textContent = "⚠️ 물탱크 수위가 낮아 물주기를 중단하고 자동으로 채웁니다.";
         if (!fillingInterval) {
           startFilling();
         }
-        if (tankWarningTimeout) clearTimeout(tankWarningTimeout);
-        tankWarningTimeout = setTimeout(() => {
-          waterTankAlert.textContent = "";
-          tankWarningTimeout = null;
-        }, 10000);
-      } else if (waterTankLevel <= 10) {
-        waterTankAlert.textContent = "⚠️ 물탱크가 거의 비어있습니다!";
-        if (tankWarningTimeout) clearTimeout(tankWarningTimeout);
-        tankWarningTimeout = setTimeout(() => {
-          waterTankAlert.textContent = "";
-          tankWarningTimeout = null;
-        }, 10000);
-      } else if (!tankWarningTimeout) {
+        if (!autoFillMsgTimeout) {
+          waterTankAlert.textContent = "⚠️ 물 부족! 자동으로 물탱크를 채우고 있습니다...";
+          autoFillMsgTimeout = setTimeout(() => {
+            waterTankAlert.textContent = "";
+            autoFillMsgTimeout = null;
+          }, 5000);
+        }
+      } else {
+        // 5% 초과 시 경고 및 메시지 초기화
+        if (autoFillMsgTimeout) {
+          clearTimeout(autoFillMsgTimeout);
+          autoFillMsgTimeout = null;
+        }
         waterTankAlert.textContent = "";
       }
-
-      updateButtonStates();
     }
 
-    function updateButtonStates() {
-      const wateringActive = wateringInterval !== null;
-      const fillingActive = fillingInterval !== null;
-
-      wateringStartBtn.disabled = wateringActive || fillingActive;
-      wateringStopBtn.disabled = !wateringActive;
-
-      wateringTimedStartBtn.disabled = wateringActive || fillingActive;
-
-      fillingStartBtn.disabled = fillingActive || wateringActive;
-      fillingStopBtn.disabled = !fillingActive;
-    }
-
-    function changeTemp(delta) {
-      temperature += delta;
-      if (temperature < 0) temperature = 0;
+    function changeTemp(amount) {
+      temperature += amount;
+      if (temperature < -10) temperature = -10;
       if (temperature > 50) temperature = 50;
       updateDisplay();
     }
 
-    function changeHumidity(delta) {
-      humidity += delta;
+    function changeHumidity(amount) {
+      humidity += amount;
       if (humidity < 0) humidity = 0;
       if (humidity > 100) humidity = 100;
       updateDisplay();
     }
 
     function startWatering() {
-      if (wateringInterval || fillingInterval) return;
+      if (wateringInterval) return;
+      if (waterTankLevel <= 5) {
+        alert("물탱크 수위가 너무 낮아 물주기를 시작할 수 없습니다.");
+        return;
+      }
       wateringInterval = setInterval(() => {
         if (waterTankLevel > 0) {
           waterTankLevel -= 1; // 1%씩 감소
           if (waterTankLevel < 0) waterTankLevel = 0;
-
-          if (waterTankLevel <= 5) {
-            stopWatering();
-            startFilling();
-          }
           updateDisplay();
-        } else {
-          stopWatering();
         }
       }, 1000);
-      updateButtonStates();
+      wateringStartBtn.disabled = true;
+      wateringStopBtn.disabled = false;
+      wateringTimedStartBtn.disabled = true;
     }
 
     function stopWatering() {
@@ -342,97 +313,139 @@
         clearInterval(wateringInterval);
         wateringInterval = null;
       }
-      if (wateringTimeout) {
-        clearTimeout(wateringTimeout);
-        wateringTimeout = null;
-      }
-      updateButtonStates();
-    }
-
-    function startWateringForDuration() {
-      const durationSec = Number(wateringDurationInput.value);
-      if (!durationSec || durationSec <= 0) {
-        alert("물주기 시간을 초 단위로 올바르게 입력하세요.");
-        return;
-      }
-      if (wateringInterval || fillingInterval) return;
-
-      startWatering();
-      wateringTimeout = setTimeout(() => {
-        stopWatering();
-      }, durationSec * 1000);
+      wateringStartBtn.disabled = false;
+      wateringStopBtn.disabled = true;
+      wateringTimedStartBtn.disabled = false;
+      updateDisplay();
     }
 
     function startFilling() {
-      if (fillingInterval || wateringInterval) return;
+      if (fillingInterval) return;
       fillingInterval = setInterval(() => {
         if (waterTankLevel < 100) {
           waterTankLevel += 2; // 2%씩 증가
           if (waterTankLevel > 100) waterTankLevel = 100;
           updateDisplay();
+          if (waterTankLevel >= 100) {
+            stopFilling();
+          }
         } else {
           stopFilling();
+          updateDisplay();
         }
-      }, 500);
-      updateButtonStates();
+      }, 1000);
+      fillingStartBtn.disabled = true;
+      fillingStopBtn.disabled = false;
+      wateringTimedStartBtn.disabled = true;
+      wateringStartBtn.disabled = true;
+      wateringStopBtn.disabled = true;
     }
 
     function stopFilling() {
       if (fillingInterval) {
         clearInterval(fillingInterval);
         fillingInterval = null;
-        updateButtonStates();
       }
+      fillingStartBtn.disabled = false;
+      fillingStopBtn.disabled = true;
+      wateringTimedStartBtn.disabled = false;
+      wateringStartBtn.disabled = false;
+      wateringStopBtn.disabled = true;
+      updateDisplay();
+    }
+
+    function startWateringForDuration() {
+      const seconds = parseInt(wateringDurationInput.value);
+      if (isNaN(seconds) || seconds <= 0) {
+        alert("물주기 시간을 초 단위로 올바르게 입력하세요.");
+        return;
+      }
+      if (waterTankLevel <= 5) {
+        alert("물탱크 수위가 너무 낮아 물주기를 시작할 수 없습니다.");
+        return;
+      }
+      startWatering();
+      wateringTimeout = setTimeout(() => {
+        stopWatering();
+      }, seconds * 1000);
+      wateringTimedStartBtn.disabled = true;
     }
 
     // 커뮤니티 기능
-
     function addPost() {
       const content = postInput.value.trim();
       if (!content) {
-        alert("게시글 내용을 입력하세요.");
+        alert("게시글 내용을 입력해주세요.");
         return;
       }
-      posts.unshift({ content, time: new Date().toISOString(), comments: [] });
+      const post = {
+        id: Date.now(),
+        content,
+        timestamp: new Date().toISOString(),
+        comments: []
+      };
+      posts.unshift(post);
       postInput.value = "";
-      saveAndRenderPosts();
+      savePosts();
+      renderPosts();
     }
 
-    function saveAndRenderPosts() {
-      localStorage.setItem("communityPosts", JSON.stringify(posts));
+    function addComment(postId, commentTextInput) {
+      const text = commentTextInput.value.trim();
+      if (!text) {
+        alert("댓글 내용을 입력해주세요.");
+        return;
+      }
+      const post = posts.find(p => p.id === postId);
+      if (!post) return;
+      post.comments.push({
+        id: Date.now(),
+        text,
+        timestamp: new Date().toISOString()
+      });
+      commentTextInput.value = "";
+      savePosts();
       renderPosts();
+    }
+
+    function savePosts() {
+      localStorage.setItem("communityPosts", JSON.stringify(posts));
     }
 
     function renderPosts() {
       postListDiv.innerHTML = "";
-      if (posts.length === 0) {
-        postListDiv.textContent = "작성된 게시글이 없습니다.";
-        return;
-      }
-      posts.forEach((post, postIndex) => {
-        const postEl = document.createElement("div");
-        postEl.className = "post";
+      posts.forEach(post => {
+        const postDiv = document.createElement("div");
+        postDiv.className = "post";
 
-        const timeEl = document.createElement("time");
-        timeEl.textContent = new Date(post.time).toLocaleString();
+        const time = new Date(post.timestamp);
+        const timeStr = time.toLocaleString();
 
-        const contentEl = document.createElement("p");
-        contentEl.textContent = post.content;
+        const header = document.createElement("div");
+        header.style.display = "flex";
+        header.style.justifyContent = "space-between";
+        header.style.alignItems = "center";
 
-        postEl.appendChild(timeEl);
-        postEl.appendChild(contentEl);
+        const timeElem = document.createElement("time");
+        timeElem.textContent = timeStr;
 
-        // 댓글 목록
-        const commentsEl = document.createElement("div");
-        post.comments.forEach((comment) => {
-          const commentEl = document.createElement("div");
-          commentEl.className = "comment";
-          commentEl.textContent = comment;
-          commentsEl.appendChild(commentEl);
+        header.appendChild(timeElem);
+
+        const contentP = document.createElement("p");
+        contentP.textContent = post.content;
+
+        postDiv.appendChild(header);
+        postDiv.appendChild(contentP);
+
+        post.comments.forEach(comment => {
+          const commentDiv = document.createElement("div");
+          commentDiv.className = "comment";
+
+          const commentTime = new Date(comment.timestamp).toLocaleString();
+          commentDiv.textContent = `[${commentTime}] ${comment.text}`;
+          postDiv.appendChild(commentDiv);
         });
-        postEl.appendChild(commentsEl);
 
-        // 댓글 입력 UI
         const commentInputDiv = document.createElement("div");
         commentInputDiv.className = "comment-input";
 
@@ -441,28 +454,18 @@
         commentInput.placeholder = "댓글 입력...";
 
         const commentBtn = document.createElement("button");
-        commentBtn.textContent = "댓글 달기";
-
-        commentBtn.addEventListener("click", () => {
-          const val = commentInput.value.trim();
-          if (!val) {
-            alert("댓글 내용을 입력하세요.");
-            return;
-          }
-          posts[postIndex].comments.push(val);
-          saveAndRenderPosts();
-        });
+        commentBtn.textContent = "등록";
+        commentBtn.onclick = () => addComment(post.id, commentInput);
 
         commentInputDiv.appendChild(commentInput);
         commentInputDiv.appendChild(commentBtn);
 
-        postEl.appendChild(commentInputDiv);
+        postDiv.appendChild(commentInputDiv);
 
-        postListDiv.appendChild(postEl);
+        postListDiv.appendChild(postDiv);
       });
     }
 
-    // 초기화
     updateDisplay();
     renderPosts();
   </script>
