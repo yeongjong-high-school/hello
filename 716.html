@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>스마트팜 원격 제어</title>
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #f0f8ff;
+      padding: 30px;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      color: #2e7d32;
+      margin-bottom: 40px;
+      text-shadow: 1px 1px 3px #a5d6a7;
+      text-align: center;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(46, 125, 50, 0.15);
+      padding: 30px;
+      width: 320px;
+      margin-bottom: 30px;
+      text-align: center;
+      user-select: none;
+      position: relative;
+    }
+    .status {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1b5e20;
+      margin-bottom: 10px;
+      text-shadow: 1px 1px 2px #a5d6a7;
+    }
+    .alert {
+      color: #d32f2f;
+      font-weight: 700;
+      margin-top: 8px;
+      font-size: 14px;
+      min-height: 18px;
+      transition: opacity 0.3s ease;
+    }
+    .btn-group button {
+      background-color: #388e3c;
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      margin: 8px 12px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.25s ease;
+    }
+    .btn-group button:hover:not(:disabled) {
+      background-color: #2e7d32;
+    }
+    .btn-group button:disabled {
+      background-color: #a5d6a7;
+      cursor: not-allowed;
+    }
+    input[type="number"] {
+      width: 80px;
+      font-size: 16px;
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-right: 10px;
+      text-align: center;
+    }
+    /* 커뮤니티 스타일 */
+    #community {
+      width: 320px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-top: 40px;
+      user-select: text;
+    }
+    #community h2 {
+      color: #2e7d32;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    #postInput {
+      width: 100%;
+      height: 60px;
+      resize: none;
+      padding: 8px;
+      font-size: 14px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+      font-family: inherit;
+    }
+    #addPostBtn {
+      background-color: #388e3c;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 20px;
+      font-size: 16px;
+    }
+    #addPostBtn:hover {
+      background-color: #2e7d32;
+    }
+    .post {
+      border-top: 1px solid #ddd;
+      padding-top: 10px;
+      margin-top: 10px;
+    }
+    .post time {
+      font-size: 12px;
+      color: #777;
+      display: block;
+      margin-bottom: 6px;
+    }
+    .post p {
+      white-space: pre-wrap;
+      font-size: 14px;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    .comment {
+      font-size: 13px;
+      margin-left: 15px;
+      margin-bottom: 6px;
+      padding-left: 6px;
+      border-left: 2px solid #a5d6a7;
+      color: #444;
+    }
+    .comment-input {
+      display: flex;
+      margin-top: 6px;
+      margin-left: 15px;
+    }
+    .comment-input input[type="text"] {
+      flex-grow: 1;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      padding: 6px 8px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+    .comment-input button {
+      background-color: #388e3c;
+      border: none;
+      color: white;
+      padding: 6px 14px;
+      margin-left: 6px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background-color 0.25s ease;
+    }
+    .comment-input button:hover {
+      background-color: #2e7d32;
+    }
+  </style>
+</head>
+<body>
+  <h1>스마트팜 원격 제어</h1>
+
+  <div class="card">
+    <div class="status" id="tempStatus">온도: 25°C</div>
+    <div id="tempAlert" class="alert"></div>
+    <div class="btn-group">
+      <button onclick="changeTemp(1)">온도 올리기 ▲</button>
+      <button onclick="changeTemp(-1)">온도 내리기 ▼</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="status" id="humidityStatus">습도: 60%</div>
+    <div id="humidityAlert" class="alert"></div>
+    <div class="btn-group">
+      <button onclick="changeHumidity(5)">습도 올리기 ▲</button>
+      <button onclick="changeHumidity(-5)">습도 내리기 ▼</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="status" id="waterTankStatus">물탱크: 100%</div>
+    <div id="waterTankAlert" class="alert"></div>
+    <div class="btn-group" style="flex-wrap: wrap; justify-content: center;">
+      <button id="wateringStartBtn" onclick="startWatering()">물주기 시작</button>
+      <button id="wateringStopBtn" onclick="stopWatering()" disabled>물주기 멈추기</button>
+      <button id="fillingStartBtn" onclick="startFilling()">물탱크 채우기 시작</button>
+      <button id="fillingStopBtn" onclick="stopFilling()" disabled>물탱크 채우기 멈추기</button>
+    </div>
+
+    <div style="margin-top: 15px; text-align: center;">
+      <input id="wateringDuration" type="number" min="1" placeholder="초 단위" />
+      <button id="wateringTimedStartBtn" onclick="startWateringForDuration()">설정한 시간 동안 물주기</button>
+    </div>
+  </div>
+
+  <!-- 커뮤니티 영역 -->
+  <div id="community" class="card">
+    <h2>커뮤니티</h2>
+    <textarea id="postInput" placeholder="새 게시글 작성..."></textarea>
+    <button id="addPostBtn" onclick="addPost()">게시글 올리기</button>
+    <div id="postList">작성된 게시글이 없습니다.</div>
+  </div>
+
+  <script>
+    let temperature = 25;
+    let humidity = 60;
+    let waterTankLevel = 100;
+
+    const tempDisplay = document.getElementById("tempStatus");
+    const tempAlert = document.getElementById("tempAlert");
+    const humidityDisplay = document.getElementById("humidityStatus");
+    const humidityAlert = document.getElementById("humidityAlert");
+    const waterTankDisplay = document.getElementById("waterTankStatus");
+    const waterTankAlert = document.getElementById("waterTankAlert");
+
+    const wateringStartBtn = document.getElementById("wateringStartBtn");
+    const wateringStopBtn = document.getElementById("wateringStopBtn");
+    const fillingStartBtn = document.getElementById("fillingStartBtn");
+    const fillingStopBtn = document.getElementById("fillingStopBtn");
+    const wateringTimedStartBtn = document.getElementById("wateringTimedStartBtn");
+    const wateringDurationInput = document.getElementById("wateringDuration");
+
+    let wateringInterval = null;
+    let fillingInterval = null;
+    let wateringTimeout = null;
+    let tankWarningTimeout = null;
+
+    // 커뮤니티 관련
+    const postInput = document.getElementById("postInput");
+    const postListDiv = document.getElementById("postList");
+    let posts = JSON.parse(localStorage.getItem("communityPosts") || "[]");
+
+    function updateDisplay() {
+      tempDisplay.textContent = `온도: ${temperature}°C`;
+      humidityDisplay.textContent = `습도: ${humidity}%`;
+      waterTankDisplay.textContent = `물탱크: ${waterTankLevel.toFixed(1)}%`;
+
+      // 온도 알람
+      if (temperature <= 5) {
+        tempAlert.textContent = "⚠️ 경고: 온도가 너무 낮습니다! 식물에 해로울 수 있습니다.";
+      } else if (temperature >= 40) {
+        tempAlert.textContent = "⚠️ 경고: 온도가 너무 높습니다! 식물에 해로울 수 있습니다.";
+      } else {
+        tempAlert.textContent = "";
+      }
+
+      // 습도 알람
+      if (humidity <= 20) {
+        humidityAlert.textContent = "⚠️ 경고: 습도가 너무 낮습니다! 식물에 해로울 수 있습니다.";
+      } else if (humidity >= 80) {
+        humidityAlert.textContent = "⚠️ 경고: 습도가 너무 높습니다! 식물에 해로울 수 있습니다.";
+      } else {
+        humidityAlert.textContent = "";
+      }
+
+      // 물탱크 알람
+      if (waterTankLevel <= 5) {
+        waterTankAlert.textContent = "⚠️ 물탱크 수위가 낮아 물주기를 중단하고 자동으로 채웁니다.";
+        if (!fillingInterval) {
+          startFilling();
+        }
+        if (tankWarningTimeout) clearTimeout(tankWarningTimeout);
+        tankWarningTimeout = setTimeout(() => {
+          waterTankAlert.textContent = "";
+          tankWarningTimeout = null;
+        }, 10000);
+      } else if (waterTankLevel <= 10) {
+        waterTankAlert.textContent = "⚠️ 물탱크가 거의 비어있습니다!";
+        if (tankWarningTimeout) clearTimeout(tankWarningTimeout);
+        tankWarningTimeout = setTimeout(() => {
+          waterTankAlert.textContent = "";
+          tankWarningTimeout = null;
+        }, 10000);
+      } else if (!tankWarningTimeout) {
+        waterTankAlert.textContent = "";
+      }
+
+      updateButtonStates();
+    }
+
+    function updateButtonStates() {
+      const wateringActive = wateringInterval !== null;
+      const fillingActive = fillingInterval !== null;
+
+      wateringStartBtn.disabled = wateringActive || fillingActive;
+      wateringStopBtn.disabled = !wateringActive;
+
+      wateringTimedStartBtn.disabled = wateringActive || fillingActive;
+
+      fillingStartBtn.disabled = fillingActive || wateringActive;
+      fillingStopBtn.disabled = !fillingActive;
+    }
+
+    function changeTemp(delta) {
+      temperature += delta;
+      if (temperature < 0) temperature = 0;
+      if (temperature > 50) temperature = 50;
+      updateDisplay();
+    }
+
+    function changeHumidity(delta) {
+      humidity += delta;
+      if (humidity < 0) humidity = 0;
+      if (humidity > 100) humidity = 100;
+      updateDisplay();
+    }
+
+    function startWatering() {
+      if (wateringInterval || fillingInterval) return;
+      wateringInterval = setInterval(() => {
+        if (waterTankLevel > 0) {
+          waterTankLevel -= 1; // 1%씩 감소
+          if (waterTankLevel < 0) waterTankLevel = 0;
+
+          if (waterTankLevel <= 5) {
+            stopWatering();
+            startFilling();
+          }
+          updateDisplay();
+        } else {
+          stopWatering();
+        }
+      }, 1000);
+      updateButtonStates();
+    }
+
+    function stopWatering() {
+      if (wateringInterval) {
+        clearInterval(wateringInterval);
+        wateringInterval = null;
+      }
+      if (wateringTimeout) {
+        clearTimeout(wateringTimeout);
+        wateringTimeout = null;
+      }
+      updateButtonStates();
+    }
+
+    function startWateringForDuration() {
+      const durationSec = Number(wateringDurationInput.value);
+      if (!durationSec || durationSec <= 0) {
+        alert("물주기 시간을 초 단위로 올바르게 입력하세요.");
+        return;
+      }
+      if (wateringInterval || fillingInterval) return;
+
+      startWatering();
+      wateringTimeout = setTimeout(() => {
+        stopWatering();
+      }, durationSec * 1000);
+    }
+
+    function startFilling() {
+      if (fillingInterval || wateringInterval) return;
+      fillingInterval = setInterval(() => {
+        if (waterTankLevel < 100) {
+          waterTankLevel += 2; // 2%씩 증가
+          if (waterTankLevel > 100) waterTankLevel = 100;
+          updateDisplay();
+        } else {
+          stopFilling();
+        }
+      }, 500);
+      updateButtonStates();
+    }
+
+    function stopFilling() {
+      if (fillingInterval) {
+        clearInterval(fillingInterval);
+        fillingInterval = null;
+        updateButtonStates();
+      }
+    }
+
+    // 커뮤니티 기능
+
+    function addPost() {
+      const content = postInput.value.trim();
+      if (!content) {
+        alert("게시글 내용을 입력하세요.");
+        return;
+      }
+      posts.unshift({ content, time: new Date().toISOString(), comments: [] });
+      postInput.value = "";
+      saveAndRenderPosts();
+    }
+
+    function saveAndRenderPosts() {
+      localStorage.setItem("communityPosts", JSON.stringify(posts));
+      renderPosts();
+    }
+
+    function renderPosts() {
+      postListDiv.innerHTML = "";
+      if (posts.length === 0) {
+        postListDiv.textContent = "작성된 게시글이 없습니다.";
+        return;
+      }
+      posts.forEach((post, postIndex) => {
+        const postEl = document.createElement("div");
+        postEl.className = "post";
+
+        const timeEl = document.createElement("time");
+        timeEl.textContent = new Date(post.time).toLocaleString();
+
+        const contentEl = document.createElement("p");
+        contentEl.textContent = post.content;
+
+        postEl.appendChild(timeEl);
+        postEl.appendChild(contentEl);
+
+        // 댓글 목록
+        const commentsEl = document.createElement("div");
+        post.comments.forEach((comment) => {
+          const commentEl = document.createElement("div");
+          commentEl.className = "comment";
+          commentEl.textContent = comment;
+          commentsEl.appendChild(commentEl);
+        });
+        postEl.appendChild(commentsEl);
+
+        // 댓글 입력 UI
+        const commentInputDiv = document.createElement("div");
+        commentInputDiv.className = "comment-input";
+
+        const commentInput = document.createElement("input");
+        commentInput.type = "text";
+        commentInput.placeholder = "댓글 입력...";
+
+        const commentBtn = document.createElement("button");
+        commentBtn.textContent = "댓글 달기";
+
+        commentBtn.addEventListener("click", () => {
+          const val = commentInput.value.trim();
+          if (!val) {
+            alert("댓글 내용을 입력하세요.");
+            return;
+          }
+          posts[postIndex].comments.push(val);
+          saveAndRenderPosts();
+        });
+
+        commentInputDiv.appendChild(commentInput);
+        commentInputDiv.appendChild(commentBtn);
+
+        postEl.appendChild(commentInputDiv);
+
+        postListDiv.appendChild(postEl);
+      });
+    }
+
+    // 초기화
+    updateDisplay();
+    renderPosts();
+  </script>
+</body>
+</html>
