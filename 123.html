@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>친환경 챌린지 - 깔끔한 카드 디자인</title>
+  <title>친환경 챌린지 - 인증 피드 포함</title>
   <style>
     body {
       font-family: 'Noto Sans KR', sans-serif;
@@ -10,7 +10,7 @@
       padding: 30px;
       color: #333;
     }
-    h1 {
+    h1, h2 {
       color: #2e7d32;
       text-align: center;
       margin-bottom: 30px;
@@ -58,18 +58,12 @@
       font-weight: 600;
       text-shadow: 1px 1px 2px #a5d6a7;
     }
-    h2 {
-      color: #2e7d32;
-      margin-bottom: 15px;
-      text-align: center;
-      text-shadow: 1px 1px 2px #a5d6a7;
-    }
-    #items {
+    #items, #certifyFeed {
       max-width: 700px;
       margin: 0 auto 30px auto;
       display: flex;
-      gap: 15px;
       flex-wrap: wrap;
+      gap: 15px;
       justify-content: center;
     }
     .item {
@@ -113,7 +107,7 @@
     }
     #resetBtn {
       display: block;
-      margin: 0 auto;
+      margin: 0 auto 30px;
       background-color: #4caf50;
       border: none;
       padding: 14px 26px;
@@ -128,6 +122,34 @@
     }
     #resetBtn:hover {
       background-color: #388e3c;
+    }
+    #certifyForm textarea {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+    }
+    #certifyForm input[type="file"] {
+      margin-bottom: 10px;
+    }
+    #postBtn {
+      padding: 10px 20px;
+      background-color: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #certifyFeed div {
+      width: 100%;
+      background: white;
+      border: 1px solid #c8e6c9;
+      border-radius: 12px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      padding: 15px 20px;
+      display: flex;
+      flex-direction: column;
     }
   </style>
 </head>
@@ -145,6 +167,17 @@
   <ul id="purchasedItems"></ul>
 
   <button id="resetBtn">새 챌린지 시작하기</button>
+
+  <h2>챌린지 인증하기</h2>
+  <div id="certifyForm" style="max-width:700px;margin:0 auto 30px;">
+    <textarea id="certifyText" rows="4" placeholder="챌린지 내용을 입력하세요 (예: 오늘 텀블러 사용 인증!)"></textarea>
+    <input type="file" id="certifyImage" accept="image/*">
+    <br>
+    <button id="postBtn">인증 게시</button>
+  </div>
+
+  <h2>인증 피드</h2>
+  <div id="certifyFeed"></div>
 
   <script>
     const allChallenges = [
@@ -169,8 +202,6 @@
 
     let points = 0;
     let purchased = [];
-
-    // 각 챌린지 자리별 현재 인덱스 저장 배열
     let challengeIndices = [];
 
     function updatePoints(change) {
@@ -208,7 +239,7 @@
             updatePoints(-item.cost);
             purchased.push(item.name);
             updatePurchasedItems();
-            alert(`${item.name}을(를) 구매했습니다!`);
+            alert(`${item.name}을(를) 구매했했습니다!`);
           } else {
             alert("포인트가 부족합니다!");
           }
@@ -220,12 +251,10 @@
       });
     }
 
-    // 랜덤으로 챌린지 인덱스 뽑기 (중복 방지 위해 이미 선택된 인덱스는 제외)
     function getRandomChallengeIndex(excludeIndices=[]) {
       const availableIndices = allChallenges.map((_, i) => i).filter(i => !excludeIndices.includes(i));
-      if(availableIndices.length === 0) return -1; // 남은 챌린지 없음
-      const randIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
-      return randIndex;
+      if(availableIndices.length === 0) return -1;
+      return availableIndices[Math.floor(Math.random() * availableIndices.length)];
     }
 
     function renderChallenges() {
@@ -244,19 +273,13 @@
         checkbox.addEventListener("change", () => {
           if(checkbox.checked) {
             updatePoints(10);
-
-            // 다음 챌린지 인덱스 뽑기, 현재 challengeIndices에서 중복 안되게 제외
             const nextIdx = getRandomChallengeIndex(challengeIndices);
-
             if(nextIdx !== -1) {
               challengeIndices[idx] = nextIdx;
             } else {
               alert("새로운 챌린지가 더 이상 없습니다!");
             }
-
-            // 체크박스 해제
             checkbox.checked = false;
-
             renderChallenges();
           }
         });
@@ -264,15 +287,12 @@
         label.appendChild(checkbox);
         label.appendChild(document.createElement("span"));
         label.lastChild.textContent = challengeText;
-
         container.appendChild(label);
       });
     }
 
     function startChallenges() {
       challengeIndices = [];
-
-      // 중복 없이 3개 챌린지 인덱스 뽑기
       while(challengeIndices.length < 3) {
         const idx = getRandomChallengeIndex(challengeIndices);
         if(idx !== -1) {
@@ -281,12 +301,125 @@
           break;
         }
       }
-
       renderChallenges();
     }
 
     document.getElementById("resetBtn").addEventListener("click", () => {
       startChallenges();
+    });
+
+    // 인증 게시 기능
+    document.getElementById("postBtn").addEventListener("click", () => {
+      const text = document.getElementById("certifyText").value.trim();
+      const imageInput = document.getElementById("certifyImage");
+      const feed = document.getElementById("certifyFeed");
+
+      if (!text && !imageInput.files.length) {
+        alert("내용 또는 이미지를 입력하세요!");
+        return;
+      }
+
+      const card = document.createElement("div");
+
+      const content = document.createElement("p");
+      content.textContent = text;
+      content.style.marginBottom = "10px";
+      content.style.fontWeight = "500";
+      card.appendChild(content);
+
+      if (imageInput.files.length) {
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(imageInput.files[0]);
+        img.style.maxWidth = "100%";
+        img.style.borderRadius = "8px";
+        img.style.marginTop = "10px";
+        card.appendChild(img);
+      }
+
+      const likeSection = document.createElement("div");
+      likeSection.style.marginTop = "12px";
+      likeSection.style.display = "flex";
+      likeSection.style.alignItems = "center";
+      likeSection.style.gap = "8px";
+
+      const likeBtn = document.createElement("button");
+      likeBtn.textContent = "❤️ 좋아요";
+      likeBtn.style.padding = "6px 12px";
+      likeBtn.style.border = "none";
+      likeBtn.style.borderRadius = "6px";
+      likeBtn.style.cursor = "pointer";
+      likeBtn.style.backgroundColor = "#e0f2f1";
+      likeBtn.style.fontWeight = "600";
+
+      const likeCount = document.createElement("span");
+      likeCount.textContent = "0";
+
+      let liked = false;
+
+      likeBtn.addEventListener("click", () => {
+        if (!liked) {
+          let count = parseInt(likeCount.textContent);
+          likeCount.textContent = count + 1;
+          liked = true;
+          likeBtn.style.backgroundColor = "#a5d6a7";
+          likeBtn.textContent = "💚 좋아요";
+        }
+      });
+
+      likeSection.appendChild(likeBtn);
+      likeSection.appendChild(likeCount);
+      card.appendChild(likeSection);
+// 댓글 섹션
+const commentSection = document.createElement("div");
+commentSection.style.marginTop = "15px";
+
+const commentList = document.createElement("div");
+commentList.style.display = "flex";
+commentList.style.flexDirection = "column";
+commentList.style.gap = "6px";
+commentList.style.marginBottom = "10px";
+
+const commentInput = document.createElement("input");
+commentInput.type = "text";
+commentInput.placeholder = "댓글을 입력하세요";
+commentInput.style.padding = "6px 10px";
+commentInput.style.border = "1px solid #ccc";
+commentInput.style.borderRadius = "6px";
+commentInput.style.width = "100%";
+commentInput.style.marginBottom = "6px";
+
+const commentBtn = document.createElement("button");
+commentBtn.textContent = "댓글 등록";
+commentBtn.style.padding = "6px 12px";
+commentBtn.style.border = "none";
+commentBtn.style.borderRadius = "6px";
+commentBtn.style.cursor = "pointer";
+commentBtn.style.backgroundColor = "#c8e6c9";
+commentBtn.style.fontWeight = "600";
+
+commentBtn.addEventListener("click", () => {
+  const commentText = commentInput.value.trim();
+  if (commentText) {
+    const comment = document.createElement("div");
+    comment.textContent = `💬 ${commentText}`;
+    comment.style.padding = "4px 8px";
+    comment.style.backgroundColor = "#f1f8e9";
+    comment.style.borderRadius = "6px";
+    comment.style.fontSize = "14px";
+    commentList.appendChild(comment);
+    commentInput.value = "";
+  }
+});
+
+commentSection.appendChild(commentList);
+commentSection.appendChild(commentInput);
+commentSection.appendChild(commentBtn);
+card.appendChild(commentSection);
+
+      feed.prepend(card);
+
+      document.getElementById("certifyText").value = "";
+      imageInput.value = "";
     });
 
     // 초기 실행
@@ -295,3 +428,357 @@
   </script>
 </body>
 </html>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>2025년 5월 TODO 캘린더</title>
+  <style>
+    body {
+      margin: 0; padding: 20px;
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f4f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    header {
+      width: 100%;
+      max-width: 480px;
+      background-color: #a8d5ba;
+      color: #2a5d4e;
+      text-align: center;
+      padding: 20px 0;
+      font-size: 2.5rem;
+      font-weight: bold;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      user-select: none;
+      margin-bottom: 20px;
+    }
+
+    .calendar {
+      width: 100%;
+      max-width: 480px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+      padding: 20px;
+      user-select: none;
+    }
+
+    .calendar-header {
+      text-align: center;
+      font-weight: 600;
+      color: #2a5d4e;
+      font-size: 1.3rem;
+      margin-bottom: 12px;
+    }
+
+    .calendar-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      color: #7cb99e;
+      font-weight: 600;
+      margin-bottom: 8px;
+      user-select: none;
+    }
+
+    .calendar-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+
+    .calendar-day {
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      font-weight: 500;
+      user-select: none;
+      border: 2px solid transparent;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+      min-height: 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .calendar-day:hover {
+      background-color: #d6eadf;
+    }
+    .calendar-day.today {
+      border-color: #7cb99e;
+      font-weight: 700;
+    }
+    .calendar-day.selected {
+      background-color: #a8d5ba;
+      color: white;
+      font-weight: 700;
+    }
+    .calendar-day.empty {
+      cursor: default;
+      background-color: transparent;
+    }
+
+    .todo-preview {
+      font-size: 0.75rem;
+      color: #4b7053;
+      margin-top: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .todo-container {
+      margin-top: 20px;
+      width: 100%;
+      max-width: 480px;
+    }
+    .todo-container h2 {
+      color: #2a5d4e;
+      font-weight: 700;
+      margin-bottom: 10px;
+      user-select: none;
+    }
+
+    .input-area {
+      display: flex;
+      margin-bottom: 15px;
+    }
+
+    #input {
+      flex-grow: 1;
+      padding: 12px 15px;
+      font-size: 1.1rem;
+      border: 2px solid #a8d5ba;
+      border-radius: 8px 0 0 8px;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+    #input:focus {
+      border-color: #7cb99e;
+      box-shadow: 0 0 8px rgba(124,185,158,0.5);
+    }
+
+    button {
+      padding: 12px 20px;
+      font-size: 1.1rem;
+      background-color: #a8d5ba;
+      color: #2a5d4e;
+      border: none;
+      border-radius: 0 8px 8px 0;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #7cb99e;
+    }
+
+    #output {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+
+    li {
+      background-color: white;
+      border: 2px solid #a8d5ba;
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.2s ease;
+    }
+    li.done {
+      text-decoration: line-through;
+      color: #6b7a6b;
+      border-color: #7cb99e;
+      background-color: #d6eadf;
+    }
+    li input[type="checkbox"] {
+      margin-right: 15px;
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <header>2025년 5월 TODO 캘린더</header>
+
+  <div class="calendar">
+    <div class="calendar-header">2025년 5월</div>
+    <div class="calendar-weekdays">
+      <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+    </div>
+    <div class="calendar-days" id="calendar-days"></div>
+  </div>
+
+  <div class="todo-container">
+    <h2 id="selected-date-title">날짜를 선택하세요</h2>
+    <div class="input-area">
+      <input id="input" type="text" placeholder="할 일을 입력하세요" disabled />
+      <button id="add-btn" disabled>추가</button>
+    </div>
+    <ul id="output"></ul>
+  </div>
+
+  <script>
+    const calendarDays = document.getElementById('calendar-days');
+    const selectedDateTitle = document.getElementById('selected-date-title');
+    const input = document.getElementById('input');
+    const addBtn = document.getElementById('add-btn');
+    const output = document.getElementById('output');
+
+    const year = 2025;
+    const month = 4; // 5월은 4 (0부터 시작)
+
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
+    const lastDateOfMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+
+    let selectedDate = null;
+    let todosByDate = {};
+
+    function loadTodos() {
+      const saved = localStorage.getItem('todosByDate');
+      if (saved) {
+        todosByDate = JSON.parse(saved);
+      }
+    }
+
+    function saveTodos() {
+      localStorage.setItem('todosByDate', JSON.stringify(todosByDate));
+    }
+
+    function formatDate(year, month, day) {
+      return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+
+    function renderCalendar() {
+      calendarDays.innerHTML = '';
+
+      for (let i = 0; i < firstDayOfMonth; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.classList.add('calendar-day', 'empty');
+        calendarDays.appendChild(emptyCell);
+      }
+
+      for (let day = 1; day <= lastDateOfMonth; day++) {
+        const dateCell = document.createElement('div');
+        dateCell.classList.add('calendar-day');
+
+        const dateStr = formatDate(year, month, day);
+        dateCell.innerHTML = `<div>${day}</div>`;
+
+        const todos = todosByDate[dateStr] || [];
+        if (todos.length > 0) {
+          const preview = document.createElement('div');
+          preview.className = 'todo-preview';
+          preview.textContent = todos[0].text.length > 12 ? todos[0].text.slice(0, 12) + '…' : todos[0].text;
+          dateCell.appendChild(preview);
+        }
+
+        if (
+          today.getFullYear() === year &&
+          today.getMonth() === month &&
+          today.getDate() === day
+        ) {
+          dateCell.classList.add('today');
+        }
+
+        if (selectedDate === dateStr) {
+          dateCell.classList.add('selected');
+        }
+
+        dateCell.addEventListener('click', () => {
+          selectedDate = dateStr;
+          renderCalendar();
+          renderTodos();
+          input.disabled = false;
+          addBtn.disabled = false;
+          input.focus();
+        });
+
+        calendarDays.appendChild(dateCell);
+      }
+    }
+
+    function renderTodos() {
+      output.innerHTML = '';
+
+      if (!selectedDate) {
+        selectedDateTitle.textContent = '날짜를 선택하세요';
+        input.value = '';
+        input.disabled = true;
+        addBtn.disabled = true;
+        return;
+      }
+
+      selectedDateTitle.textContent = `${selectedDate} 할 일 목록`;
+      const todos = todosByDate[selectedDate] || [];
+
+      todos.forEach((todo, index) => {
+        const li = document.createElement('li');
+        if (todo.done) li.classList.add('done');
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = todo.done;
+
+        checkbox.addEventListener('change', () => {
+          todos[index].done = checkbox.checked;
+          saveTodos();
+          renderTodos();
+        });
+
+        const span = document.createElement('span');
+        span.textContent = todo.text;
+
+        li.appendChild(checkbox);
+        li.appendChild(span);
+        output.appendChild(li);
+      });
+    }
+
+    function addTodo() {
+      const text = input.value.trim();
+      if (!text || !selectedDate) return;
+
+      if (!todosByDate[selectedDate]) {
+        todosByDate[selectedDate] = [];
+      }
+
+      todosByDate[selectedDate].push({ text, done: false });
+      saveTodos();
+      renderTodos();
+      renderCalendar(); // ✅ 새 할 일 추가 시 달력도 다시 렌더링
+      input.value = '';
+      input.focus();
+    }
+
+    addBtn.addEventListener('click', addTodo);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addTodo();
+    });
+
+    loadTodos();
+    renderCalendar();
+    renderTodos();
+  </script>
+</body>
+</html>
+

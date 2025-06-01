@@ -1,0 +1,207 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google AI Studio LLM 응답기</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 700px;
+            margin: auto;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input[type="password"],
+        textarea {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .response-area {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9e9e9;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            white-space: pre-wrap; /* 줄바꿈 및 공백 유지 */
+            word-wrap: break-word;
+        }
+        .status {
+            margin-top: 10px;
+            font-style: italic;
+            color: #555;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Google AI Studio LLM 응답기</h1>
+        <p><strong>주의:</strong> 이 페이지는 API 키를 브라우저에서 직접 사용합니다. 테스트용으로만 사용하고, 실제 서비스에는 사용하지 마세요.</p>
+
+        <div>
+            <label for="apiKey">Google AI Studio API 키:</label>
+            <input type="password" id="apiKey" placeholder="API 키를 입력하세요">
+        </div>
+
+        <div>
+            <label for="prompt">프롬프트:</label>
+            <textarea id="prompt" placeholder="질문이나 지시사항을 입력하세요"></textarea>
+        </div>
+
+        <button id="submitBtn">응답 생성</button>
+
+        <div id="status" class="status"></div>
+        <div id="response" class="response-area" style="display:none;"></div>
+    </div>
+
+    <script>
+        const apiKeyInput = document.getElementById('apiKey');
+        const promptInput = document.getElementById('prompt');
+        const submitBtn = document.getElementById('submitBtn');
+        const responseDiv = document.getElementById('response');
+        const statusDiv = document.getElementById('status');
+
+        // Google AI Studio (Gemini API) 엔드포인트
+        // 모델을 변경하려면 'gemini-1.5-flash-latest' 부분을 수정하세요 (예: 'gemini-pro', 'gemini-1.5-pro-latest')
+        const API_URL_TEMPLATE = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=";
+
+        submitBtn.addEventListener('click', async () => {
+            const apiKey = apiKeyInput.value.trim();
+            const prompt = promptInput.value.trim();
+
+            if (!apiKey) {
+                alert('API 키를 입력해주세요.');
+                return;
+            }
+            if (!prompt) {
+                alert('프롬프트를 입력해주세요.');
+                return;
+            }
+
+            responseDiv.style.display = 'none';
+            responseDiv.textContent = '';
+            statusDiv.textContent = '응답을 생성 중입니다...';
+            statusDiv.classList.remove('error');
+            submitBtn.disabled = true;
+
+            try {
+                const fullApiUrl = API_URL_TEMPLATE + apiKey;
+
+                const requestBody = {
+                    contents: [{
+                        parts: [{
+                            text: prompt
+                        }]
+                    }],
+                    // 필요에 따라 generationConfig 추가 가능
+                    // "generationConfig": {
+                    //   "temperature": 0.9,
+                    //   "topK": 1,
+                    //   "topP": 1,
+                    //   "maxOutputTokens": 2048,
+                    // },
+                    // "safetySettings": [ // 기본값으로도 충분할 수 있으나, 필요시 조절
+                    //   { "category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE" },
+                    //   { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE" },
+                    //   { "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE" },
+                    //   { "category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE" }
+                    // ]
+                };
+
+                const response = await fetch(fullApiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('API Error Response:', errorData);
+                    throw new Error(`API 오류: ${response.status} ${response.statusText}. ${errorData.error?.message || ''}`);
+                }
+
+                const data = await response.json();
+
+                if (data.candidates && data.candidates.length > 0 &&
+                    data.candidates[0].content && data.candidates[0].content.parts &&
+                    data.candidates[0].content.parts.length > 0) {
+
+                    // 안전상의 이유로 차단되었는지 확인
+                    if (data.candidates[0].finishReason === "SAFETY") {
+                        responseDiv.textContent = "응답이 안전상의 이유로 차단되었습니다. 프롬프트를 수정하거나 안전 설정을 확인하세요.";
+                        if (data.promptFeedback && data.promptFeedback.blockReason) {
+                            responseDiv.textContent += `\n차단 이유: ${data.promptFeedback.blockReason}`;
+                        }
+                    } else {
+                        responseDiv.textContent = data.candidates[0].content.parts[0].text;
+                    }
+
+                } else if (data.promptFeedback && data.promptFeedback.blockReason) {
+                    // 프롬프트 자체가 차단된 경우
+                    responseDiv.textContent = `프롬프트가 차단되었습니다. 이유: ${data.promptFeedback.blockReason}`;
+                    if (data.promptFeedback.safetyRatings) {
+                        responseDiv.textContent += "\n세부 안전 등급: " + JSON.stringify(data.promptFeedback.safetyRatings, null, 2);
+                    }
+                }
+                else {
+                    responseDiv.textContent = '유효한 응답을 받지 못했습니다. 응답 구조를 확인하세요.';
+                    console.warn('Unexpected response structure:', data);
+                }
+                responseDiv.style.display = 'block';
+                statusDiv.textContent = '응답 완료!';
+
+            } catch (error) {
+                console.error('Fetch Error:', error);
+                statusDiv.textContent = `오류 발생: ${error.message}`;
+                statusDiv.classList.add('error');
+                responseDiv.style.display = 'none';
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
